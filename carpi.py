@@ -55,6 +55,7 @@ class CarPi:
         for command in OBD_COMMANDS:
             current_data[command] = self.obd.query(command)
 
+        print(current_data)
         self.loop.call_later(60, self.handle_interval)
 
     # RPM
