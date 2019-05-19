@@ -35,7 +35,7 @@ class CarPi:
         self.loop = asyncio.get_event_loop()
 
         self.obd.start()
-        self.loop.call_soon(self.handle_interval, self)
+        self.loop.call_soon(self.handle_interval)
         self.loop.run_forever()
 
     def stop(self):
@@ -44,7 +44,7 @@ class CarPi:
 
     def handle_interval(self):
         if self.obd.is_connected() == False:
-            self.loop.call_later(5, self.handle_interval, self)
+            self.loop.call_later(5, self.handle_interval)
             return
         print("Querying OBD connection")
 
@@ -55,7 +55,7 @@ class CarPi:
         for command in OBD_COMMANDS:
             current_data[command] = self.obd.query(command)
 
-        self.loop.call_later(60, self.handle_interval, self)
+        self.loop.call_later(60, self.handle_interval)
 
     # RPM
     # SPEED
