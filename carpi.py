@@ -3,6 +3,8 @@ import datetime
 
 import obd
 
+from gps import *
+
 OBD_COMMANDS = [
     obd.commands.RPM,
     obd.commands.SPEED,
