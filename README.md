@@ -5,9 +5,15 @@
 ### Stage 1 - ODBII
 https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/
 
+$35
+
 https://smile.amazon.com/gp/product/B07N38B86S/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1
 
+$30
+
 https://smile.amazon.com/gp/product/B005NLQAHS/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1
+
+$25
 
 * Query OBD about 1/minute
   * RPM, MPH, Gas/Battery, Diagnostics Codes
@@ -23,6 +29,12 @@ Begin insertion into database.
 ### Stage 2 - GPS
 
 https://smile.amazon.com/gp/product/B008200LHW/ref=ox_sc_saved_title_2?smid=ATVPDKIKX0DER&psc=1
+
+$25
+
+https://www.amazon.com/MPU-6050-MPU6050-Accelerometer-Gyroscope-Converter/dp/B008BOPN40/
+
+$6
 
 ### Stage 3 - Gas/Battery
 
