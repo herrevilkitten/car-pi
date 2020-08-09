@@ -39,7 +39,7 @@ class CarPi:
         self.obd = None
         self.loop = None
         self.agps_thread = None
-        self.current_data = [{}]
+        self.current_data = []
 
     def start(self):
         self.obd = obd.Async(self.port)
@@ -88,11 +88,12 @@ class CarPi:
         current_gps = self.handle_gps()
 
         self.current_data.append({
-            "timestamp": datetime.datetime.now()
+            "timestamp": datetime.datetime.now(),
             "obd": current_obd,
             "gps": current_gps
         })
 
+        print(self.current_data)
         self.loop.call_later(GPS_INTERVALS, self.handle_interval)
 
     # RPM
