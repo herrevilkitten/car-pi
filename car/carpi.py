@@ -21,6 +21,16 @@ OBD_COMMANDS = [
     obd.commands.GET_DTC
 ]
 
+GPS_FIELDS = [
+    "time",
+    "lat",
+    "lon",
+    "speed",
+    "track"
+]
+
+GPS_INTERVALS = 5
+OBD_INTERVALS = 30
 
 class CarPi:
     def __init__(self, port):
@@ -29,6 +39,7 @@ class CarPi:
         self.obd = None
         self.loop = None
         self.agps_thread = None
+        self.current_data = [{}]
 
     def start(self):
         self.obd = obd.Async(self.port)
@@ -55,28 +66,34 @@ class CarPi:
             return
         print("Querying OBD connection")
 
-        current_data = {
-            "timestamp": datetime.datetime.now()
-        }
+        current_data = {}
 
         for command in OBD_COMMANDS:
             current_data[command] = self.obd.query(command)
 
         print(current_data)
-        self.loop.call_later(60, self.handle_interval)
+        return current_data
 
     def handle_gps(self):
-        print(                   self.agps_thread.data_stream.time)
-        print('Lat:{}   '.format(self.agps_thread.data_stream.lat))
-        print('Lon:{}   '.format(self.agps_thread.data_stream.lon))
-        print('Speed:{} '.format(self.agps_thread.data_stream.speed))
-        print('Course:{}'.format(self.agps_thread.data_stream.track))
+        current_data = {}
+        
+        for field in GPS_FIELDS:
+            current_data[field] = self.agps_thread.data_stream[field]
+            
+        print(current_data)
+        return current_data
 
     def handle_interval(self):
-        self.handle_obd()
-        self.handle_gps()
+        current_obd = self.handle_obd()
+        current_gps = self.handle_gps()
 
-        self.loop.call_later(5, self.handle_interval)
+        self.current_data.append({
+            "timestamp": datetime.datetime.now()
+            "obd": current_obd,
+            "gps": current_gps
+        })
+
+        self.loop.call_later(GPS_INTERVALS, self.handle_interval)
 
     # RPM
     # SPEED
