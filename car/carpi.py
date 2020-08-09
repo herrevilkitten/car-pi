@@ -5,8 +5,6 @@ import obd
 
 from gps3.agps3threaded import AGPS3mechanism
 #from gps import *
-agps_thread = AGPS3mechanism()
-agps_thread.stream_data()
 
 OBD_COMMANDS = [
     obd.commands.RPM,
@@ -30,6 +28,7 @@ class CarPi:
         self.port = port
         self.obd = None
         self.loop = None
+        self.agps_thread = None
 
     def start(self):
         self.obd = obd.Async(self.port)
@@ -38,6 +37,10 @@ class CarPi:
             self.obd.watch(command)
 
         self.loop = asyncio.get_event_loop()
+
+        self.agps_thread = AGPS3mechanism()
+        self.agps_thread.stream_data(host='localhost', port=2947)
+        self.agps_thread.run_thread()
 
         self.obd.start()
         self.loop.call_soon(self.handle_interval)
@@ -63,17 +66,17 @@ class CarPi:
         self.loop.call_later(60, self.handle_interval)
 
     def handle_gps(self):
-        print(                   agps_thread.data_stream.time)
-        print('Lat:{}   '.format(agps_thread.data_stream.lat))
-        print('Lon:{}   '.format(agps_thread.data_stream.lon))
-        print('Speed:{} '.format(agps_thread.data_stream.speed))
-        print('Course:{}'.format(agps_thread.data_stream.track))
+        print(                   self.agps_thread.data_stream.time)
+        print('Lat:{}   '.format(self.agps_thread.data_stream.lat))
+        print('Lon:{}   '.format(self.agps_thread.data_stream.lon))
+        print('Speed:{} '.format(self.agps_thread.data_stream.speed))
+        print('Course:{}'.format(self.agps_thread.data_stream.track))
 
     def handle_interval(self):
         self.handle_obd()
         self.handle_gps()
 
-        self.loop.call_later(15, self.handle_interval)
+        self.loop.call_later(5, self.handle_interval)
 
     # RPM
     # SPEED
