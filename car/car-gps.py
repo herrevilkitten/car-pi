@@ -1,3 +1,5 @@
+
+"""
 from gps3 import agps3
 gps_socket = agps3.GPSDSocket()
 data_stream = agps3.DataStream()
@@ -9,4 +11,4 @@ for new_data in gps_socket:
         print('Altitude  = ', data_stream.alt)
         print('Latitude  = ', data_stream.lat)
         print('Longitude = ', data_stream.lon)
-
+"""

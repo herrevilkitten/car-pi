@@ -3,7 +3,10 @@ import datetime
 
 import obd
 
-from gps import *
+from gps3.agps3threaded import AGPS3mechanism
+#from gps import *
+agps_thread = AGPS3mechanism()
+agps_thread.stream_data()
 
 OBD_COMMANDS = [
     obd.commands.RPM,
@@ -44,9 +47,8 @@ class CarPi:
         self.loop.stop()
         self.obd.stop()
 
-    def handle_interval(self):
+    def handle_obd(self):
         if self.obd.is_connected() == False:
-            self.loop.call_later(5, self.handle_interval)
             return
         print("Querying OBD connection")
 
@@ -59,6 +61,19 @@ class CarPi:
 
         print(current_data)
         self.loop.call_later(60, self.handle_interval)
+
+    def handle_gps(self):
+        print(                   agps_thread.data_stream.time)
+        print('Lat:{}   '.format(agps_thread.data_stream.lat))
+        print('Lon:{}   '.format(agps_thread.data_stream.lon))
+        print('Speed:{} '.format(agps_thread.data_stream.speed))
+        print('Course:{}'.format(agps_thread.data_stream.track))
+
+    def handle_interval(self):
+        self.handle_obd()
+        self.handle_gps()
+
+        self.loop.call_later(15, self.handle_interval)
 
     # RPM
     # SPEED
