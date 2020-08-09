@@ -78,7 +78,7 @@ class CarPi:
         current_data = {}
         
         for field in GPS_FIELDS:
-            current_data[field] = self.agps_thread.data_stream[field]
+            current_data[field] = getattr(self.agps_thread.data_stream, field)
             
         print(current_data)
         return current_data
