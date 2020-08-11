@@ -1,10 +1,9 @@
 import asyncio
 import datetime
+import sqlite3
 
 import obd
-
 from gps3.agps3threaded import AGPS3mechanism
-#from gps import *
 
 OBD_COMMANDS = [
     obd.commands.RPM,
@@ -25,6 +24,7 @@ GPS_FIELDS = [
     "time",
     "lat",
     "lon",
+    "alt",
     "speed",
     "track"
 ]
@@ -40,6 +40,8 @@ class CarPi:
         self.loop = None
         self.agps_thread = None
         self.current_data = []
+        self.interval_count = 0
+        self.sqlite = sqlite3.connect("car-pi.db")
 
     def start(self):
         self.obd = obd.Async(self.port)
@@ -61,40 +63,74 @@ class CarPi:
         self.loop.stop()
         self.obd.stop()
 
+    def init_database(self):
+        cursor = self.sqlite.cursor()
+        cursor.execute("""
+CREATE TABLE IF NOT EXISTS CarPi_Entry (
+    id INTEGER AUTOINCREMENT,
+    timestamp STRING,
+    latitude NUMBER,
+    longitude NUMBER,
+    altitude NUMBER,
+    speed NUMBER,
+    track NUMBER
+)
+        """)
+        cursor.commit()
+
     def handle_obd(self):
         if self.obd.is_connected() == False:
             return
-        print("Querying OBD connection")
+        print("Querying OBD")
 
         current_data = {}
 
         for command in OBD_COMMANDS:
             current_data[command] = self.obd.query(command)
 
-        print(current_data)
         return current_data
 
     def handle_gps(self):
+        print("Querying GPS")
         current_data = {}
         
         for field in GPS_FIELDS:
             current_data[field] = getattr(self.agps_thread.data_stream, field)
             
-        print(current_data)
         return current_data
 
+    def record_data(self):
+        print("Saving data")
+        data = []
+        for entry in self.current_data:
+            data.append((
+                entry["timestamp"].isoformat(),
+                entry["gps"]["lat"],
+                entry["gps"]["lon"],
+                entry["gps"]["alt"],
+                entry["gps"]["speed"],
+                entry["gps"]["track"],
+            ))
+
+        cursor = self.sqlite.cursor()
+        cursor.executemany("INSERT INTO CarPi_Entry VALUES (?, ?, ?, ?, ?, ?)", data)
+
     def handle_interval(self):
+        self.interval_count = self.interval_count + 1
         current_obd = self.handle_obd()
         current_gps = self.handle_gps()
 
         self.current_data.append({
-            "timestamp": datetime.datetime.now(),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc),
             "obd": current_obd,
             "gps": current_gps
         })
 
         print(self.current_data)
         self.loop.call_later(GPS_INTERVALS, self.handle_interval)
+
+        if (self.interval_count % 60 == 0):
+            self.record_data()
 
     # RPM
     # SPEED
