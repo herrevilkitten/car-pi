@@ -64,8 +64,9 @@ class CarPi:
         self.obd.stop()
 
     def init_database(self):
-        cursor = self.sqlite.cursor()
-        cursor.execute("""
+        try:
+            cursor = self.sqlite.cursor()
+            cursor.execute("""
 CREATE TABLE IF NOT EXISTS CarPi_Entry (
     id INTEGER AUTOINCREMENT,
     timestamp STRING,
@@ -76,7 +77,9 @@ CREATE TABLE IF NOT EXISTS CarPi_Entry (
     track NUMBER
 )
         """)
-        cursor.commit()
+            cursor.commit()
+        except sqlite3.Error as e:
+            print "An error occurred:", e.args[0]
 
     def handle_obd(self):
         if self.obd.is_connected() == False:
@@ -112,8 +115,12 @@ CREATE TABLE IF NOT EXISTS CarPi_Entry (
                 entry["gps"]["track"],
             ))
 
-        cursor = self.sqlite.cursor()
-        cursor.executemany("INSERT INTO CarPi_Entry VALUES (?, ?, ?, ?, ?, ?)", data)
+        try:
+            cursor = self.sqlite.cursor()
+            cursor.executemany("INSERT INTO CarPi_Entry VALUES (?, ?, ?, ?, ?, ?)", data)
+            cursor.commit()
+        except sqlite3.Error as e:
+            print "An error occurred:", e.args[0]
 
     def handle_interval(self):
         self.interval_count = self.interval_count + 1
