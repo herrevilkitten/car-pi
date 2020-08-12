@@ -44,6 +44,8 @@ class CarPi:
         self.sqlite = sqlite3.connect("car-pi.db")
 
     def start(self):
+        self.init_database()
+
         self.obd = obd.Async(self.port)
 
         for command in OBD_COMMANDS:
@@ -68,7 +70,7 @@ class CarPi:
             cursor = self.sqlite.cursor()
             cursor.execute("""
 CREATE TABLE IF NOT EXISTS CarPi_Entry (
-    id INTEGER AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp STRING,
     latitude NUMBER,
     longitude NUMBER,
@@ -77,9 +79,8 @@ CREATE TABLE IF NOT EXISTS CarPi_Entry (
     track NUMBER
 )
         """)
-            cursor.commit()
         except sqlite3.Error as e:
-            print "An error occurred:", e.args[0]
+            print("An error occurred:", e.args[0])
 
     def handle_obd(self):
         if self.obd.is_connected() == False:
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS CarPi_Entry (
         data = []
         for entry in self.current_data:
             data.append((
+                None,
                 entry["timestamp"].isoformat(),
                 entry["gps"]["lat"],
                 entry["gps"]["lon"],
@@ -117,10 +119,10 @@ CREATE TABLE IF NOT EXISTS CarPi_Entry (
 
         try:
             cursor = self.sqlite.cursor()
-            cursor.executemany("INSERT INTO CarPi_Entry VALUES (?, ?, ?, ?, ?, ?)", data)
-            cursor.commit()
+            cursor.executemany("INSERT INTO CarPi_Entry VALUES (?, ?, ?, ?, ?, ?, ?)", data)
+            self.sqlite.commit()
         except sqlite3.Error as e:
-            print "An error occurred:", e.args[0]
+            print("An error occurred:", e.args[0])
 
     def handle_interval(self):
         self.interval_count = self.interval_count + 1
@@ -133,10 +135,10 @@ CREATE TABLE IF NOT EXISTS CarPi_Entry (
             "gps": current_gps
         })
 
-        print(self.current_data)
+#        print(self.current_data)
         self.loop.call_later(GPS_INTERVALS, self.handle_interval)
 
-        if (self.interval_count % 60 == 0):
+        if (self.interval_count % 10 == 0):
             self.record_data()
 
     # RPM
